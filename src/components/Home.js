@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "./Home.css";
 import { toast } from 'react-toastify';
@@ -24,7 +24,7 @@ function Home() {
   const navigate = useNavigate();
 
   // Lấy danh sách sinh viên từ server
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`${process.env.REACT_APP_API_URL}/get-students`, {
@@ -43,11 +43,11 @@ function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchStudents();
-  }, []);
+  }, [fetchStudents]);
 
   // Xử lý tìm kiếm sinh viên
   const handleSearch = (e) => {

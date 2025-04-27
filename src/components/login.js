@@ -21,7 +21,7 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const API_URL = "https://backend-zw3r.onrender.com";
+  const API_URL = "https://backend-zw3r.onrender.com";  // Đảm bảo API_URL đúng cho backend của bạn
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -103,8 +103,10 @@ const LoginPage = () => {
       });
 
       if (response.data.success) {
+        // Lưu thông tin người dùng vào localStorage
         localStorage.setItem("user", JSON.stringify(response.data.user));
 
+        // Chuyển hướng theo vai trò người dùng
         if (response.data.user.role === "admin") {
           navigate("/home");
         } else {
