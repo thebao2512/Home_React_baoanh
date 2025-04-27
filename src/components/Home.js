@@ -3,15 +3,13 @@ import { useNavigate, Link } from "react-router-dom";
 import "./Home.css";
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import LoadingSpinner from './LoadingSpinner'; // Import spinner component
+import ConfirmationModal from './ConfirmationModal'; // Modal component for confirmation
 
 function Home() {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
-  const [search, setSearch] = useState({
-    mssv: "",
-    hoten: "",
-    lop: "",
-  });
+  const [search, setSearch] = useState({ mssv: "", hoten: "", lop: "" });
   const [showAddForm, setShowAddForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [student, setStudent] = useState({
@@ -21,6 +19,7 @@ function Home() {
     lop: "",
     ngaysinh: "",
   });
+  const [deletingStudent, setDeletingStudent] = useState(null); // Track student to delete
 
   const navigate = useNavigate();
 
@@ -78,7 +77,7 @@ function Home() {
     setFilteredStudents(filtered);
   };
 
-  // Xử lý thay đổi input trong form thêm sinh viên
+  // Thay đổi giá trị input trong form thêm sinh viên
   const handleChange = (e) => {
     const { name, value } = e.target;
     setStudent((prev) => ({
@@ -87,7 +86,7 @@ function Home() {
     }));
   };
 
-  // Thêm sinh viên
+  // Thêm sinh viên mới
   const handleAddStudent = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -117,12 +116,9 @@ function Home() {
 
       if (response.status === 200) {
         toast.success(response.data.message || "Thêm sinh viên thành công");
-        // Reset form
         setStudent({ mssv: "", hoten: "", khoa: "", lop: "", ngaysinh: "" });
-        // Ẩn form
         setShowAddForm(false);
-        // Chuyển hướng về trang Home
-        navigate('/home');
+        fetchStudents(); // Refresh list after adding
       } else {
         throw new Error(response.data.error || "Không thể thêm sinh viên");
       }
@@ -135,22 +131,17 @@ function Home() {
   };
 
   // Xóa sinh viên
-  const handleDeleteStudent = async (mssv) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa sinh viên này?')) {
-      return;
-    }
+  const handleDeleteStudent = async () => {
+    if (!deletingStudent) return;
 
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/delete-student`, { mssv });
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/delete-student`, { mssv: deletingStudent });
 
       if (response.data.message) {
-        // Cập nhật danh sách sinh viên ngay lập tức
-        const updatedStudents = students.filter(student => student.mssv !== mssv);
-        setStudents(updatedStudents);
-        setFilteredStudents(updatedStudents);
-
-        // Hiển thị thông báo thành công
+        setStudents(students.filter(student => student.mssv !== deletingStudent));
+        setFilteredStudents(filteredStudents.filter(student => student.mssv !== deletingStudent));
         toast.success("Xóa sinh viên thành công!");
+        setDeletingStudent(null); // Reset after deletion
       } else {
         throw new Error(response.data.error || "Không thể xóa sinh viên");
       }
@@ -250,7 +241,7 @@ function Home() {
         </div>
       )}
 
-      {loading && <div className="loading">Đang tải dữ liệu...</div>}
+      {loading && <LoadingSpinner />}
 
       <table className="student-table">
         <thead>
@@ -284,7 +275,7 @@ function Home() {
                   </button>
                   <button
                     className="delete-button"
-                    onClick={() => handleDeleteStudent(student.mssv)}
+                    onClick={() => setDeletingStudent(student.mssv)}
                     disabled={loading}
                   >
                     Xóa
@@ -301,6 +292,14 @@ function Home() {
           )}
         </tbody>
       </table>
+
+      {deletingStudent && (
+        <ConfirmationModal
+          message="Bạn có chắc chắn muốn xóa sinh viên này?"
+          onConfirm={handleDeleteStudent}
+          onCancel={() => setDeletingStudent(null)}
+        />
+      )}
 
       <div className="action-buttons">
         <Link to="/group-management" className="group-management-btn">

@@ -46,7 +46,7 @@ axios.interceptors.response.use(
 
 // Định nghĩa ProtectedRoute
 function ProtectedRoute({ children, allowedRole }) {
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(sessionStorage.getItem("user")); // Sử dụng sessionStorage thay vì localStorage
   if (!user || (allowedRole && user.role !== allowedRole)) {
     return <Navigate to="/login" replace />;
   }
@@ -94,7 +94,6 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
-          
           <Route
             path="/attendance"
             element={
@@ -172,10 +171,10 @@ function AppContent() {
 
 function Sidebar() {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(sessionStorage.getItem("user")); // Sử dụng sessionStorage thay vì localStorage
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("user"); // Xóa user từ sessionStorage
     navigate("/login");
   };
 
